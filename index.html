@@ -29,9 +29,20 @@ nav{position:fixed;top:0;left:0;right:0;z-index:9000;background:rgba(27,58,45,.9
 .nav-tab.active{color:#fff;background:var(--green-mid);}
 
 /* PAGES */
-.page{display:none;min-height:100vh;padding-top:64px;}
+.page{
+  display:none;
+  min-height:calc(100vh - 64px);
+  padding-top:64px;
+  overflow:hidden;
+}
 .page.active{display:block;}
-
+body{
+  overflow-x:hidden;
+  overflow-y:auto;
+}
+.init-steps{
+  display:none;
+}
 /* HERO */
 .hero{min-height:92vh;background:linear-gradient(160deg,var(--green-deep) 0%,#2a5240 50%,#1e4a35 100%);position:relative;overflow:hidden;display:flex;align-items:center;}
 .hero-bg-pattern{position:absolute;inset:0;background-image:radial-gradient(circle at 20% 50%,rgba(74,155,111,.15) 0%,transparent 50%),radial-gradient(circle at 80% 20%,rgba(200,146,42,.1) 0%,transparent 40%),radial-gradient(circle at 60% 80%,rgba(74,155,111,.1) 0%,transparent 40%);}
@@ -877,6 +888,80 @@ document.addEventListener('keydown',e=>{if(e.key==='Enter'&&document.getElementB
 
 // Init community on load
 document.addEventListener('DOMContentLoaded', renderStories);
+function initQuiz(){
+  const questions = [
+    {
+      q: "How often do you visit green spaces?",
+      options: ["Daily","Few times a week","Rarely","Never"],
+      score: [4,3,2,1]
+    },
+    {
+      q: "Do you have plants at home?",
+      options: ["Many","A few","One","None"],
+      score: [4,3,2,1]
+    },
+    {
+      q: "How stressed do you feel daily?",
+      options: ["Low","Moderate","High","Very high"],
+      score: [4,3,2,1]
+    },
+    {
+      q: "How often are you outdoors?",
+      options: ["Very often","Sometimes","Rarely","Never"],
+      score: [4,3,2,1]
+    },
+    {
+      q: "Do you feel calmer in nature?",
+      options: ["Yes, always","Mostly","Not much","Not at all"],
+      score: [4,3,2,1]
+    }
+  ];
+
+  let index = 0;
+  let total = 0;
+
+  function render(){
+    const q = questions[index];
+    document.getElementById("quizBar").style.width = ((index)/questions.length)*100 + "%";
+
+    document.getElementById("quizContent").innerHTML = `
+      <div class="quiz-q">${q.q}</div>
+      <div class="quiz-options">
+        ${q.options.map((opt,i)=>`
+          <button class="quiz-opt" onclick="answer(${i})">${opt}</button>
+        `).join("")}
+      </div>
+    `;
+  }
+
+  window.answer = function(i){
+    total += questions[index].score[i];
+    index++;
+
+    if(index >= questions.length){
+      showResult();
+    } else {
+      render();
+    }
+  }
+
+  function showResult(){
+    let msg = "";
+
+    if(total >= 17) msg = "You're doing great. Keep it up 🌿";
+    else if(total >= 12) msg = "You're decent, but need more green 🌱";
+    else msg = "You need nature. Badly. Go outside.";
+
+    document.getElementById("quizContent").innerHTML = `
+      <div class="quiz-result">
+        <div class="quiz-result-score">${total}/20</div>
+        <div class="quiz-result-msg">${msg}</div>
+      </div>
+    `;
+  }
+
+  render();
+}
 </script>
 </body>
 </html>
