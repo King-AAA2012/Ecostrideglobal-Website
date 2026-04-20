@@ -30,10 +30,8 @@ nav{position:fixed;top:0;left:0;right:0;z-index:9000;background:rgba(27,58,45,.9
 
 /* PAGES */
 .page{
-  display:none;
-  min-height:calc(100vh - 64px);
+  display:none; 
   padding-top:64px;
-  overflow:hidden;
 }
 .page.active{display:block;}
 body{
@@ -42,6 +40,9 @@ body{
 }
 .init-steps{
   display:none;
+}
+.page.active{
+  display:block;
 }
 /* HERO */
 .hero{min-height:92vh;background:linear-gradient(160deg,var(--green-deep) 0%,#2a5240 50%,#1e4a35 100%);position:relative;overflow:hidden;display:flex;align-items:center;}
@@ -107,7 +108,7 @@ body{
 .init-content h2{font-family:'Playfair Display',serif;font-size:24px;margin-bottom:6px;}
 .init-subtitle{font-size:13px;color:var(--gold);font-weight:600;letter-spacing:.5px;margin-bottom:14px;}
 .init-content p{font-size:15px;line-height:1.75;color:var(--text-mid);margin-bottom:16px;}
-.init-steps{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;}
+.init-steps{display:none;gap:10px;flex-wrap:wrap;margin-top:10px;}
 .init-step{background:var(--green-mist);border:1px solid rgba(74,155,111,.2);border-radius:8px;padding:8px 14px;font-size:13px;color:var(--green-mid);font-weight:500;}
 
 /* MAP */
@@ -243,6 +244,9 @@ footer .footer-logo span{color:var(--gold-light);font-style:normal;}
   .cta-floating{left:20px;right:20px;bottom:16px;}
   .cta-floating .btn-primary{width:100%;}
 }
+.action-panel .btn-primary{
+  margin:20px 0;
+}
 </style>
 </head>
 <body>
@@ -314,14 +318,7 @@ footer .footer-logo span{color:var(--gold-light);font-style:normal;}
     </div>
   </div>
 
-  <!-- QUIZ TEASER -->
-  <div class="section">
-    <div class="section-eyebrow">Take 2 Minutes</div>
-    <h2 class="section-title">How green is your <em>lifestyle?</em></h2>
-    <p class="section-body" style="margin-bottom:28px;">Answer 5 quick questions to find out how much nature you're getting and what it means for your well-being.</p>
-    <button class="btn-primary" onclick="showPage('involved');setTimeout(()=>document.getElementById('quiz-section').scrollIntoView({behavior:'smooth'}),200)">Take the Well-being Quiz</button>
-  </div>
-
+ 
   <footer><div class="footer-logo">Eco<span>Stride</span></div><div>A GD Project on Green Spaces & Human Well-being · Data from OpenStreetMap & WHO</div></footer>
 </div>
 
@@ -464,18 +461,9 @@ This initiative helped us spread awareness beyond our immediate circle and engag
         <p class="small-note" id="spotOutput"></p>
       </div>
     </div>
-  </div>
+ 
 
-  <!-- WELL-BEING QUIZ -->
-  <div class="section" id="quiz-section">
-    <div class="section-eyebrow">Well-being Check</div>
-    <h2 class="section-title">How green is your <em>lifestyle?</em></h2>
-    <p class="section-body" style="margin-bottom:8px;">Answer 5 quick questions — get a personalised well-being score and tips based on your urban environment.</p>
-    <div class="quiz-card" id="quizCard">
-      <div class="quiz-progress"><div class="quiz-progress-bar" id="quizBar" style="width:0%"></div></div>
-      <div id="quizContent"></div>
-    </div>
-  </div>
+ 
 
   <div class="section" style="padding-top:0;">
     <div class="section-eyebrow">What We're Doing</div>
@@ -497,12 +485,11 @@ This initiative helped us spread awareness beyond our immediate circle and engag
   </div>
   <footer><div class="footer-logo">Eco<span>Stride</span></div><div>Get involved · Join EcoStride · Find calm near you</div></footer>
 </div>
+ 
 
 
 
-
-<div class="cta-floating"><button class="btn-primary" onclick="showPage('involved')">Join EcoStride</button></div>
-
+<div class="cta-floating"><button class="btn-primary" style="margin:20px 0;" onclick="submitGreenSpot()">
 <script>
 // ═══ CONSTANTS ═══
 const ADMIN_PASSWORD = 'ABWA26'; // ← CHANGE THIS
@@ -951,6 +938,96 @@ function initQuiz(){
     if(total >= 17) msg = "You're doing great. Keep it up 🌿";
     else if(total >= 12) msg = "You're decent, but need more green 🌱";
     else msg = "You need nature. Badly. Go outside.";
+
+    document.getElementById("quizContent").innerHTML = `
+      <div class="quiz-result">
+        <div class="quiz-result-score">${total}/20</div>
+        <div class="quiz-result-msg">${msg}</div>
+      </div>
+    `;
+  }
+
+  render();
+}
+function initQuiz(){
+  const questions = [
+    {q:"How often do you go outdoors?",options:["Daily","Few times/week","Rarely","Never"],score:[4,3,2,1]},
+    {q:"Do you have plants at home?",options:["Many","Few","One","None"],score:[4,3,2,1]},
+    {q:"Stress level?",options:["Low","Medium","High","Very high"],score:[4,3,2,1]},
+    {q:"Time in nature?",options:["A lot","Some","Little","None"],score:[4,3,2,1]},
+    {q:"Do you feel calmer in nature?",options:["Always","Mostly","Sometimes","Never"],score:[4,3,2,1]}
+  ];
+
+  let i = 0, total = 0;
+
+  function render(){
+    const q = questions[i];
+    document.getElementById("quizBar").style.width = (i/questions.length)*100 + "%";
+
+    document.getElementById("quizContent").innerHTML = `
+      <div class="quiz-q">${q.q}</div>
+      ${q.options.map((opt,idx)=>`
+        <button class="quiz-opt" onclick="answer(${idx})">${opt}</button>
+      `).join("")}
+    `;
+  }
+
+  window.answer = function(idx){
+    total += questions[i].score[idx];
+    i++;
+    if(i<questions.length) render();
+    else showResult();
+  }
+
+  function showResult(){
+    let msg = total>15 ? "You're thriving 🌿"
+            : total>10 ? "You need more green 🌱"
+            : "Touch grass. Immediately.";
+
+    document.getElementById("quizContent").innerHTML = `
+      <div class="quiz-result">
+        <div class="quiz-result-score">${total}/20</div>
+        <div class="quiz-result-msg">${msg}</div>
+      </div>
+    `;
+  }
+
+  render();
+}
+function initQuiz(){
+  const questions = [
+    {q:"How often do you go outdoors?",options:["Daily","Few times/week","Rarely","Never"],score:[4,3,2,1]},
+    {q:"Do you have plants at home?",options:["Many","Few","One","None"],score:[4,3,2,1]},
+    {q:"Stress level?",options:["Low","Medium","High","Very high"],score:[4,3,2,1]},
+    {q:"Time in nature?",options:["A lot","Some","Little","None"],score:[4,3,2,1]},
+    {q:"Do you feel calmer in nature?",options:["Always","Mostly","Sometimes","Never"],score:[4,3,2,1]}
+  ];
+
+  let i = 0, total = 0;
+
+  function render(){
+    const q = questions[i];
+    document.getElementById("quizBar").style.width = (i/questions.length)*100 + "%";
+
+    document.getElementById("quizContent").innerHTML = `
+      <div class="quiz-q">${q.q}</div>
+      ${q.options.map((opt,idx)=>`
+        <button class="quiz-opt" onclick="answer(${idx})">${opt}</button>
+      `).join("")}
+    `;
+  }
+
+  window.answer = function(idx){
+    total += questions[i].score[idx];
+    i++;
+    if(i<questions.length) render();
+    else showResult();
+  }
+
+  function showResult(){
+    let msg = total>15 ? "You're thriving 🌿"
+            : total>10 ? "You need more green 🌱"
+            : "Go outside. Touch grass.";
 
     document.getElementById("quizContent").innerHTML = `
       <div class="quiz-result">
